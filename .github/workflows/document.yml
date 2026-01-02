@@ -15,4 +15,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: example
+        run: echo Hello World!
+
+      - name: example2
         run: echo Hello World!!
