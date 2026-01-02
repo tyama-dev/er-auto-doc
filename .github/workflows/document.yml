@@ -1,0 +1,21 @@
+name: Document
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  generate-docs:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: example
+        run: echo Hello World!
+
+      - name: example2
+        run: echo Hello World!!
