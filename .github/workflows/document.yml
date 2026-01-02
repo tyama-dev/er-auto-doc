@@ -17,6 +17,8 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: document
+          POSTGRES_HOST_AUTH_METHOD: md5
+          POSTGRES_INITDB_ARGS: "--auth-host=md5"
         ports:
           - 5432:5432
         options: >-
@@ -60,3 +62,35 @@ jobs:
           echo ""
           echo "=== contactテーブルの構造 ==="
           psql -h localhost -U postgres -d document -c "\d contact"
+
+      - name: run SchemaSpy
+        run: |
+          mkdir output
+          chmod 777 output
+          docker run \
+            --rm \
+            --net=host \
+            -v $PWD/output:/output \
+            schemaspy/schemaspy:6.1.0 \
+            -t pgsql \
+            -host localhost \
+            -port 5432 \
+            -db document \
+            -u postgres \
+            -p postgres \
+            -s public
+
+      - name: confirm files
+        run: ls ./output
+
+      - name: create orphan branch
+        run: |
+          # Gitユーザー設定
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git checkout -f --orphan documents
+          git rm -rf .
+          git add ./output
+          git commit -qm "Update docs"
+          git push origin documents
