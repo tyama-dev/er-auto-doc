@@ -30,10 +30,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      # - name: Setup Node.js
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: '20'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -91,6 +91,25 @@ jobs:
 
           git checkout -f --orphan documents
           git rm -rf .
+          
+          cat <<HTML > index.html
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>開発資料置き場</title>
+            </head>
+            <body>
+              <h1>開発資料一覧</h1>
+                <ul>
+                  <li><a target="_blank" href="./output/index.html">ER図</a></li>
+                </ul>
+            </body>
+          </html>
+          HTML
+
           git add ./output
-          git commit -qm "Update docs"
+          git add index.html
+          git commit -m "Update docs"
           git push -f origin documents
