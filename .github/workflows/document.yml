@@ -1,21 +1,96 @@
-name: Document
+name: Generate Documents
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'drizzle/migrations/**.sql'
   workflow_dispatch:
 
 jobs:
   generate-docs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: document
+          POSTGRES_HOST_AUTH_METHOD: md5
+          POSTGRES_INITDB_ARGS: "--auth-host=md5"
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: example
-        run: echo Hello World!
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
-      - name: example2
-        run: echo Hello World!!
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run migrations
+        env:
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: document
+        run: pnpm drizzle:migrate
+
+      - name: Run SchemaSpy
+        run: |
+          mkdir output
+          chmod 777 output
+          docker run \
+            --rm \
+            --net=host \
+            -v $PWD/output:/output \
+            schemaspy/schemaspy:6.1.0 \
+            -t pgsql \
+            -host localhost \
+            -port 5432 \
+            -db document \
+            -u postgres \
+            -p postgres \
+            -s public
+
+      - name: Push documents to branch
+        run: |
+          # Gitユーザー設定
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git checkout -f --orphan documents
+          git rm -rf .
+          
+          cat <<HTML > index.html
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>開発資料置き場</title>
+            </head>
+            <body>
+              <h1>開発資料一覧</h1>
+                <ul>
+                  <li><a target="_blank" href="./output/index.html">ER図</a></li>
+                </ul>
+            </body>
+          </html>
+          HTML
+
+          git add ./output
+          git add index.html
+          git commit -m "Update docs"
+          git push -f origin documents
