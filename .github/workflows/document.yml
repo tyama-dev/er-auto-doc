@@ -1,4 +1,4 @@
-name: Document
+name: Generate Documents
 
 on:
   push:
@@ -30,15 +30,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      # - name: Setup Node.js
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: '20'
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - name: Install dependencies
         run: pnpm install
@@ -50,20 +45,7 @@ jobs:
           DB_NAME: document
         run: pnpm drizzle:migrate
 
-      - name: Verify database tables
-        env:
-          PGPASSWORD: postgres
-        run: |
-          echo "=== テーブル一覧 ==="
-          psql -h localhost -U postgres -d document -c "\dt"
-          echo ""
-          echo "=== userテーブルの構造 ==="
-          psql -h localhost -U postgres -d document -c "\d user"
-          echo ""
-          echo "=== contactテーブルの構造 ==="
-          psql -h localhost -U postgres -d document -c "\d contact"
-
-      - name: run SchemaSpy
+      - name: Run SchemaSpy
         run: |
           mkdir output
           chmod 777 output
@@ -80,10 +62,7 @@ jobs:
             -p postgres \
             -s public
 
-      - name: confirm files
-        run: ls ./output
-
-      - name: create orphan branch
+      - name: Push documents to branch
         run: |
           # Gitユーザー設定
           git config user.name "github-actions[bot]"
