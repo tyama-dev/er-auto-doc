@@ -25,3 +25,8 @@ export const contact = pgTable('contact', {
   email: varchar('email', { length: 256 }).notNull(),
   userId: integer('user_id').references(() => user.id),
 });
+
+export const account = pgTable('account', {
+  ...schemaBase,
+  accountName: varchar('account_name', { length: 256 }).notNull()
+})
