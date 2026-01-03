@@ -93,4 +93,4 @@ jobs:
           git rm -rf .
           git add ./output
           git commit -qm "Update docs"
-          git push origin documents
+          git push -f origin documents
